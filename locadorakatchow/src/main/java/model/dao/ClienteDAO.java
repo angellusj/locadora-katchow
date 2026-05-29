@@ -2,6 +2,7 @@ package model.dao;
 
 import model.db.DB;
 import model.entity.Cliente;
+
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -9,151 +10,137 @@ import java.util.List;
 
 public class ClienteDAO {
 
-    /*
-     * CREATE TABLE cliente (
-     *     id_cliente SERIAL PRIMARY KEY,
-     *     nome VARCHAR(100) NOT NULL,
-     *     cpf VARCHAR(14) NOT NULL,
-     *     telefone VARCHAR(20),
-     *     email VARCHAR(100),
-     *     endereco VARCHAR(150),
-     *     data_nascimento DATE
-     * );
-     */
+    public void cadastrar(Cliente c) {
+        String sql = """
+            INSERT INTO cliente (nome, cnh, cpf, data_nascimento, rua, cep, numero, bairro, cidade,
+                                 email1, email2, telefone1, telefone2)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-    public static void cadastrarCliente(Cliente cliente) {
-        var sql = """
-                INSERT INTO cliente
-                (nome, cpf, telefone, email, endereco, data_nascimento)
-                VALUES (?, ?, ?, ?, ?, ?);
-                """;
+            ps.setString(1, c.getNome());
+            ps.setString(2, c.getCnh());
+            ps.setString(3, c.getCpf());
+            ps.setDate(4, Date.valueOf(c.getDataNascimento()));
+            ps.setString(5, c.getRua());
+            ps.setString(6, c.getCep());
+            ps.setString(7, c.getNumero());
+            ps.setString(8, c.getBairro());
+            ps.setString(9, c.getCidade());
+            ps.setString(10, c.getEmail1());
+            ps.setString(11, c.getEmail2());
+            ps.setString(12, c.getTelefone1());
+            ps.setString(13, c.getTelefone2());
+            ps.executeUpdate();
 
-        try (var conn = DB.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement pstmt =
-                         conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-                pstmt.setString(1, cliente.getNome);
-                pstmt.setString(2, cliente.getCpf());
-                pstmt.setString(3, cliente.getTelefone());
-                pstmt.setString(4, cliente.getEmail());
-                pstmt.setString(5, cliente.getEndereco());
-                pstmt.setDate(6, Date.valueOf(cliente.getDataNascimento()));
-                pstmt.executeUpdate();
-
-                ResultSet rs = pstmt.getGeneratedKeys();
-                if (rs.next()) {
-                    cliente.setId(rs.getInt(1));
-                }
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) c.setId(rs.getInt(1));
             }
-
+            System.out.println("Cliente cadastrado com sucesso! ID: " + c.getId());
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Erro ao cadastrar cliente: " + e.getMessage());
         }
     }
 
-
-    public static Cliente buscarCliente(int id) {
-        var sql = "SELECT * FROM cliente WHERE id_cliente = ?;";
-
-        try (var conn = DB.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, id);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    int id = rs.getInt("id_cliente");
-                    String nome = rs.getString("nome");
-                    String cpf = rs.getString("cpf");
-                    String telefone = rs.getString("telefone");
-                    String email = rs.getString("email");
-                    String endereco = rs.getString("endereco");
-                    LocalDate dataNascimento = rs.getDate("data_nascimento").toLocalDate();
-
-                    Cliente cliente = new Cliente(nome, cpf, telefone, email, endereco, dataNascimento);
-                    cliente.setId(id);
-                    return cliente;
-                }
+    public Cliente buscarPorId(int id) {
+        String sql = "SELECT * FROM cliente WHERE id_cliente = ?";
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapear(rs);
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Erro ao buscar cliente: " + e.getMessage());
         }
         return null;
     }
 
-    public static List<Cliente> listarCliente() {
-        List<Cliente> clientes = new ArrayList<>();
-
-        var sql = "SELECT * FROM cliente;";
-
-        try (var conn = DB.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    int id = rs.getInt("id_cliente");
-                    String nome = rs.getString("nome");
-                    String cpf= rs.getString("cpf");
-                    String telefone = rs.getString("telefone");
-                    String email = rs.getString("email");
-                    String endereco = rs.getString("endereco");
-                    LocalDate dataNascimento = rs.getDate("data_nascimento").toLocalDate();
-
-                    var cliente = new Cliente(nome, cpf, telefone, email, endereco, dataNascimento);
-                    cliente.setId(id)
-
-                    clientes.add(cliente);
-                }
-                return clientes;
+    public Cliente buscarPorCpf(String cpf) {
+        String sql = "SELECT * FROM cliente WHERE cpf = ?";
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, cpf);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapear(rs);
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Erro ao buscar cliente por CPF: " + e.getMessage());
         }
-
         return null;
     }
 
-    public static void atualizarCliente(Cliente cliente) {
-
-        var sql = """
-                UPDATE cliente
-                SET nome = ?,
-                    cpf = ?,
-                    telefone = ?,
-                    email = ?,
-                    endereco = ?,
-                    data_nascimento = ?
-                WHERE id_cliente = ?;
-                """;
-
-        try (var conn = DB.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, cliente.getNome());
-                pstmt.setString(2, cliente.getCpf());
-                pstmt.setString(3, cliente.getTelefone());
-                pstmt.setString(4, cliente.getEmail());
-                pstmt.setString(5, cliente.getEndereco());
-                pstmt.setDate(6, Date.valueOf(cliente.getDataNascimento()));
-                pstmt.setInt(7, cliente.getId());
-                pstmt.executeUpdate();
-            }
+    public List<Cliente> listarTodos() {
+        List<Cliente> lista = new ArrayList<>();
+        String sql = "SELECT * FROM cliente ORDER BY nome";
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) lista.add(mapear(rs));
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Erro ao listar clientes: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    public void atualizar(Cliente c) {
+        String sql = """
+            UPDATE cliente SET nome=?, cnh=?, cpf=?, data_nascimento=?, rua=?, cep=?, numero=?,
+                               bairro=?, cidade=?, email1=?, email2=?, telefone1=?, telefone2=?
+            WHERE id_cliente=?
+            """;
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, c.getNome());
+            ps.setString(2, c.getCnh());
+            ps.setString(3, c.getCpf());
+            ps.setDate(4, Date.valueOf(c.getDataNascimento()));
+            ps.setString(5, c.getRua());
+            ps.setString(6, c.getCep());
+            ps.setString(7, c.getNumero());
+            ps.setString(8, c.getBairro());
+            ps.setString(9, c.getCidade());
+            ps.setString(10, c.getEmail1());
+            ps.setString(11, c.getEmail2());
+            ps.setString(12, c.getTelefone1());
+            ps.setString(13, c.getTelefone2());
+            ps.setInt(14, c.getId());
+            int rows = ps.executeUpdate();
+            System.out.println(rows > 0 ? "Cliente atualizado com sucesso!" : "Cliente não encontrado.");
+        } catch (SQLException e) {
+            System.err.println("Erro ao atualizar cliente: " + e.getMessage());
         }
     }
 
-    public static void removerCliente(Cliente cliente) {
-        var sql = "DELETE FROM cliente WHERE id_cliente = ?;";
-
-        try (var conn = DB.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, cliente.getId());
-                pstmt.executeUpdate();
-            }
+    public void remover(int id) {
+        String sql = "DELETE FROM cliente WHERE id_cliente = ?";
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int rows = ps.executeUpdate();
+            System.out.println(rows > 0 ? "Cliente removido com sucesso!" : "Cliente não encontrado.");
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.err.println("Erro ao remover cliente: " + e.getMessage());
         }
+    }
+
+    private Cliente mapear(ResultSet rs) throws SQLException {
+        return new Cliente(
+            rs.getInt("id_cliente"),
+            rs.getString("nome"),
+            rs.getString("cpf"),
+            rs.getString("cnh"),
+            rs.getString("telefone1"),
+            rs.getString("telefone2"),
+            rs.getString("email1"),
+            rs.getString("email2"),
+            rs.getString("rua"),
+            rs.getString("cep"),
+            rs.getString("numero"),
+            rs.getString("bairro"),
+            rs.getString("cidade"),
+            rs.getDate("data_nascimento").toLocalDate()
+        );
     }
 }
