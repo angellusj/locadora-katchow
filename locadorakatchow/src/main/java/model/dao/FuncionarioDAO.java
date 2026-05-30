@@ -1,3 +1,4 @@
+/*
 package model.dao;
 
 import model.db.DB;
@@ -156,3 +157,5 @@ public class FuncionarioDAO {
         );
     }
 }
+
+ */
