@@ -6,126 +6,62 @@ import java.time.temporal.ChronoUnit;
 
 public class Aluguel {
     private int id;
-    private int idAutomovel;
-    private int idCliente;
-    private int idFuncionario;
-    private LocalDate dataAluguel;
-    private LocalDate dataPrevista;
-    private LocalDate dataEntregue;
-    private BigDecimal valor;
+    private LocalDate dataInicio;
+    private LocalDate dataFim;
+    private BigDecimal valorTotal;
+    private String status;;
 
-    // Campos auxiliares para exibição
-    private String nomeCliente;
-    private String modeloAutomovel;
-    private String nomeFuncionario;
-
-    public Aluguel(int id, int idAutomovel, int idCliente, int idFuncionario,
-                   LocalDate dataAluguel, LocalDate dataPrevista,
-                   LocalDate dataEntregue, BigDecimal valor) {
+    public Aluguel(int id, LocalDate dataInicio, LocalDate dataFim, BigDecimal valorTotal, String status) {
         this.id = id;
-        this.idAutomovel = idAutomovel;
-        this.idCliente = idCliente;
-        this.idFuncionario = idFuncionario;
-        this.dataAluguel = dataAluguel;
-        this.dataPrevista = dataPrevista;
-        this.dataEntregue = dataEntregue;
-        this.valor = valor;
-    }
-
-    public BigDecimal calcularValor(BigDecimal valorDiaria) {
-        LocalDate fim = (dataEntregue != null) ? dataEntregue : dataPrevista;
-        long dias = ChronoUnit.DAYS.between(dataAluguel, fim);
-        if (dias <= 0) dias = 1;
-        return valorDiaria.multiply(BigDecimal.valueOf(dias));
-    }
-
-    public int getId() { 
-        return id; 
-    }
-    public void setId(int id) { 
-        this.id = id; 
+        this.dataInicio = dataInicio;
+        this.dataFim = dataFim;
+        this.valorTotal = valorTotal;
+        this.status = status;
     }
 
     public int getIdAutomovel() { 
-        return idAutomovel; 
+        return id;
     }
-    public void setIdAutomovel(int idAutomovel) { 
-        this.idAutomovel = idAutomovel; 
-    }
-
-    public int getIdCliente() { 
-        return idCliente; 
-    }
-    public void setIdCliente(int idCliente) { 
-        this.idCliente = idCliente; 
+    public void setIdAutomovel(int id) {
+        this.id = id;
     }
 
-    public int getIdFuncionario() { 
-        return idFuncionario; 
+    public LocalDate getDataInicio() {
+        return dataInicio;
     }
-    public void setIdFuncionario(int idFuncionario) { 
-        this.idFuncionario = idFuncionario; 
-    }
-
-    public LocalDate getDataAluguel() { 
-        return dataAluguel; 
-    }
-    public void setDataAluguel(LocalDate dataAluguel) { 
-        this.dataAluguel = dataAluguel; 
+    public void setDataInicio(LocalDate dataInicio) {
+        this.dataInicio = dataInicio;
     }
 
-    public LocalDate getDataPrevista() { 
-        return dataPrevista; 
+    public LocalDate getDataFim() {
+        return dataFim;
     }
-    public void setDataPrevista(LocalDate dataPrevista) { 
-        this.dataPrevista = dataPrevista; 
-    }
-
-    public LocalDate getDataEntregue() { 
-        return dataEntregue; 
-    }
-    public void setDataEntregue(LocalDate dataEntregue) { 
-        this.dataEntregue = dataEntregue; 
+    public void setDataFim(LocalDate dataFim) {
+        this.dataFim = dataFim;
     }
 
-    public BigDecimal getValor() { 
-        return valor; 
+    public BigDecimal getValorTotal() {
+        return valorTotal;
     }
-    public void setValor(BigDecimal valor) { 
-        this.valor = valor; 
-    }
-
-    public String getNomeCliente() { 
-        return nomeCliente; 
-    }
-    public void setNomeCliente(String nomeCliente) { 
-        this.nomeCliente = nomeCliente; 
+    public void setValorTotal(BigDecimal valorTotal) {
+        this.valorTotal = valorTotal;
     }
 
-    public String getModeloAutomovel() { 
-        return modeloAutomovel; 
+    public String getStatus() {
+        return status;
     }
-    public void setModeloAutomovel(String modeloAutomovel) { 
-        this.modeloAutomovel = modeloAutomovel; 
-    }
-
-    public String getNomeFuncionario() { 
-        return nomeFuncionario; 
-    }
-    public void setNomeFuncionario(String nomeFuncionario) { 
-        this.nomeFuncionario = nomeFuncionario;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     @Override
     public String toString() {
-        return "\n=== ALUGUEL ===" +
-               "\nID: " + id +
-               "\nCliente: " + (nomeCliente != null ? nomeCliente : "ID " + idCliente) +
-               "\nAutomóvel: " + (modeloAutomovel != null ? modeloAutomovel : "ID " + idAutomovel) +
-               "\nFuncionário: " + (nomeFuncionario != null ? nomeFuncionario : "ID " + idFuncionario) +
-               "\nData do Aluguel: " + dataAluguel +
-               "\nData Prevista Devolução: " + dataPrevista +
-               "\nData de Entrega: " + (dataEntregue != null ? dataEntregue : "Não devolvido") +
-               "\nValor: " + (valor != null ? "R$ " + valor : "A calcular");
+        String res = " ";
+        res += "\nId: " + id;
+        res += "\nData Inicio: " + dataInicio;
+        res += "\nData Fim: " + dataFim;
+        res += "\nValor total: " + valorTotal;
+        res += "\nStatus: " + status;
+        return res;
     }
 }

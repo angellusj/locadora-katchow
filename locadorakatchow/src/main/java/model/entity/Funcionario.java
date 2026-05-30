@@ -5,10 +5,9 @@ import java.time.LocalDate;
 public class Funcionario extends Usuario {
     private String senha;
 
-    public Funcionario(int id, String nome, String cpf, String telefone1, String telefone2,
-                       String email1, String email2, String rua, String cep, String numero,
-                       String bairro, String cidade, LocalDate dataNascimento, String senha) {
-        super(id, nome, cpf, telefone1, telefone2, email1, email2, rua, cep, numero, bairro, cidade, dataNascimento);
+    public Funcionario(int id, String nome, String cpf, String telefone,
+                       String email, String endereco, LocalDate dataNascimento, String senha) {
+        super(nome, cpf, telefone, email, endereco, dataNascimento);
         this.senha = senha;
     }
 
@@ -17,8 +16,9 @@ public class Funcionario extends Usuario {
 
     @Override
     public String toString() {
-        return "\n=== FUNCIONÁRIO ===" +
-               "\nID: " + getId() +
-               super.toString();
+        String res = " ";
+        res += super.toString();
+        res += "\nSenha: " + this.senha;
+        return res;
     }
 }

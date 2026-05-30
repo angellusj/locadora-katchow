@@ -1,3 +1,4 @@
+/*
 package model.dao;
 
 import model.db.DB;
@@ -140,3 +141,5 @@ public class AutomovelDAO {
         );
     }
 }
+
+ */
