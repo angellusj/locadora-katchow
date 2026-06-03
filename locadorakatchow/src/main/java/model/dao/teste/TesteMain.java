@@ -16,8 +16,9 @@ public class TesteMain {
         );
         System.out.println("user.dir = " + System.getProperty("user.dir"));
         System.out.println("classpath = " + System.getProperty("java.class.path"));
+
         TesteDaoComposite testes;
-        testes = new TesteDaoComposite(new TesteClienteDAO());
+        testes = new TesteDaoComposite(new TesteClienteDAO(), new TesteFuncionarioDAO());
 
         testes.teste();
     }
