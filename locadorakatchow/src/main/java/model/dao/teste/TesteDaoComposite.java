@@ -5,13 +5,13 @@ import java.util.List;
 public class TesteDaoComposite implements TesteDaoComponent {
     List<TesteDaoComponent> testes;
 
-    public TesteDaoComposite(TesteClienteDAO args){
-        testes = List.of((TesteDaoComponent) args);
+    TesteDaoComposite(TesteDaoComponent... args){
+        testes = List.of(args);
     }
 
     @Override
     public boolean teste() {
-        for(model.dao.teste.TesteDaoComponent t : testes){
+        for(TesteDaoComponent t : testes){
             if(!t.teste())
                 return false;
         }
