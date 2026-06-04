@@ -2,7 +2,6 @@ package model.dao;
 
 import model.db.DB;
 import model.entity.Aluguel;
-import model.entity.Automovel;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -96,32 +95,48 @@ public class AluguelDAO {
         }
     }
 
-    public static Aluguel buscarPorId(int id) {
-        String sql = """
-            SELECT a.*,
-                   u_c.nome AS nome_cliente,
-                   u_f.nome AS nome_funcionario
-              FROM aluguel a
-              JOIN cliente     c   ON c.id_cliente    = a.id_cliente
-              JOIN usuario     u_c ON u_c.id          = c.id_usuario
-              JOIN funcionario f   ON f.id_funcionario = a.id_funcionario
-              JOIN usuario     u_f ON u_f.id          = f.id_usuario
-             WHERE a.id = ?
-            """;
-        try (Connection conn = DB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Aluguel al = mapear(rs);
-                    al.setAutomovel(AutomovelDAO.buscarPorId(al.getIdAutomovel()));
-                    return al;
+    /**
+     * Remove um aluguel e libera o automóvel associado (se não devolvido).
+     */
+    public static void removerAluguel(int idAluguel) {
+        try (Connection conn = DB.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Busca id_automovel e status antes de deletar
+                int idAutomovel = -1;
+                boolean deveLiberar = false;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT id_automovel, status FROM aluguel WHERE id = ?")) {
+                    ps.setInt(1, idAluguel);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) { System.out.println("Aluguel não encontrado."); return; }
+                        idAutomovel = rs.getInt("id_automovel");
+                        deveLiberar = !"devolvido".equalsIgnoreCase(rs.getString("status"));
+                    }
                 }
+                // Remove o aluguel
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM aluguel WHERE id = ?")) {
+                    ps.setInt(1, idAluguel);
+                    ps.executeUpdate();
+                }
+                // Se ainda estava ativo, libera o automóvel
+                if (deveLiberar) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE automovel SET disponivel = TRUE WHERE id = ?")) {
+                        ps.setInt(1, idAutomovel);
+                        ps.executeUpdate();
+                    }
+                }
+                conn.commit();
+                System.out.println("Aluguel removido!");
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar aluguel: " + e.getMessage());
+            System.err.println("Erro ao remover aluguel: " + e.getMessage());
         }
-        return null;
     }
 
     public static List<Aluguel> listarTodos() {
@@ -158,7 +173,7 @@ public class AluguelDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Aluguel al = mapear(rs);
-                    al.setAutomovel(AutomovelDAO.buscarPorId(al.getIdAutomovel()));
+                    al.setAutomovel(AutomovelDAO.buscarAutomovel(al.getIdAutomovel()));
                     lista.add(al);
                 }
             }
