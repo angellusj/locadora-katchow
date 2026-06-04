@@ -6,12 +6,12 @@ public class Automovel {
     private int id;
     private String marca;
     private String modelo;
-    private String ano;
+    private int ano;
     private boolean disponivel;
-    private BigDecimal valorDiaria;
+    private float valorDiaria;
 
-    public Automovel(int id, String marca, String modelo, String ano, boolean disponivel,
-                     BigDecimal valorDiaria) {
+    public Automovel(int id, String marca, String modelo, int ano, boolean disponivel,
+                     float valorDiaria) {
         this.id = id;
         this.marca = marca;
         this.modelo = modelo;
@@ -29,14 +29,14 @@ public class Automovel {
     public String getModelo() { return modelo; }
     public void setModelo(String modelo) { this.modelo = modelo; }
 
-    public String getAno() { return ano; }
-    public void setAno(String ano) { this.ano = ano; }
+    public int getAno() { return ano; }
+    public void setAno(int ano) { this.ano = ano; }
 
-    public boolean isDisponivel() { return disponivel; }
+    public boolean getDisponivel() { return disponivel; }
     public void setDisponivel(boolean disponivel) { this.disponivel = disponivel; }
 
-    public BigDecimal getValorDiaria() { return valorDiaria; }
-    public void setValorDiaria(BigDecimal valorDiaria) { this.valorDiaria = valorDiaria; }
+    public float getValorDiaria() { return valorDiaria; }
+    public void setValorDiaria(float valorDiaria) { this.valorDiaria = valorDiaria; }
 
     @Override
     public String toString() {
