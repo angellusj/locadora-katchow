@@ -25,10 +25,10 @@ public class TesteClienteDAO implements TesteDaoComponent {
 
                 cliente = new Cliente(
                         "Pedro",
-                        "11111111111",
-                        "84911111111",
-                        "pedro@email.com",
-                        "Rua Teste, 123",
+                        "55555555555",
+                        "84777777777",
+                        "pedrocliente@email.com",
+                        "Rua Teste, 678",
                         LocalDate.of(2000, 1, 1)
                 );
 
@@ -50,7 +50,7 @@ public class TesteClienteDAO implements TesteDaoComponent {
             System.out.println("Atualizando cliente...");
 
             cliente.setNome("Thiago");
-            cliente.setEmail("thiago@email.com");
+            cliente.setEmail("thiagocliente@email.com");
 
             ClienteDAO.atualizarCliente(cliente);
 

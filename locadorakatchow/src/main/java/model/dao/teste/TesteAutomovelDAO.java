@@ -16,22 +16,19 @@ public class TesteAutomovelDAO implements TesteDaoComponent {
 
             Automovel automovel = new Automovel(
                     0,
-                    "ABC1D23",
+                    "EFG4H56",
                     "Honda",
                     "Civic",
-                    2010,
+                    2015,
                     true,
-                    600.0
+                    1000.0
             );
 
             System.out.println("Inserindo automóvel...");
 
             AutomovelDAO.cadastrarAutomovel(automovel);
 
-            System.out.println(
-                    "Automóvel cadastrado com ID: "
-                            + automovel.getId()
-            );
+            System.out.println("Automóvel cadastrado com ID: " + automovel.getId());
 
             System.out.println("Atualizando automóvel...");
 
@@ -43,22 +40,16 @@ public class TesteAutomovelDAO implements TesteDaoComponent {
 
             System.out.println("Buscando automóvel por ID...");
 
-            Automovel automovelEncontrado =
-                    AutomovelDAO.buscarAutomovel(
-                            automovel.getId()
-                    );
+            Automovel automovelEncontrado = AutomovelDAO.buscarAutomovel(automovel.getId());
 
             if (automovelEncontrado != null) {
-
                 System.out.println(automovelEncontrado);
-
                 System.out.println("Automóvel encontrado!");
             }
 
             System.out.println("Listando automóveis...");
 
-            List<Automovel> automoveis =
-                    AutomovelDAO.listaAutomoveis();
+            List<Automovel> automoveis = AutomovelDAO.listaAutomoveis();
 
             for (Automovel a : automoveis) {
 

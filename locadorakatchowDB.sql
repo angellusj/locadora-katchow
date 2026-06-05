@@ -22,6 +22,8 @@ CREATE TABLE funcionario (
     id_funcionario SERIAL PRIMARY KEY,
     id_usuario INTEGER UNIQUE NOT NULL,
     cargo VARCHAR(100) NOT NULL,
+    login VARCHAR(50) UNIQUE NOT NULL,
+    senha VARCHAR(100) NOT NULL,
 
     CONSTRAINT fk_funcionario_usuario
         FOREIGN KEY (id_usuario)

@@ -18,8 +18,8 @@ public class FuncionarioDAO {
 
         String sqlFuncionario = """
         INSERT INTO funcionario
-        (id_usuario, cargo)
-        VALUES (?, ?)
+        (id_usuario, cargo, login, senha)
+        VALUES (?, ?, ?, ?)
         """;
 
         try (Connection conn = DB.getConnection()) {
@@ -47,8 +47,10 @@ public class FuncionarioDAO {
                 }
                 try (PreparedStatement pstmt =
                              conn.prepareStatement(sqlFuncionario, Statement.RETURN_GENERATED_KEYS)) {
-                    pstmt.setInt(1, idUsuario);
+                    pstmt.setInt(1, funcionario.getId());
                     pstmt.setString(2, funcionario.getCargo());
+                    pstmt.setString(3, funcionario.getLogin());
+                    pstmt.setString(4, funcionario.getSenha());
                     pstmt.executeUpdate();
 
                     ResultSet rs = pstmt.getGeneratedKeys();
@@ -69,12 +71,14 @@ public class FuncionarioDAO {
 
     public static Funcionario buscarFuncionario(int idFuncionario) {
         String sql = """
-        SELECT f.id_funcionario,
-               u.*,
-               f.cargo
+            SELECT f.id_funcionario,
+            f.cargo,
+            f.login,
+            f.senha,
+            u.*
         FROM funcionario f
         JOIN usuario u
-             ON u.id = f.id_usuario
+            ON u.id = f.id_usuario
         WHERE f.id_funcionario = ?
         """;
 
@@ -85,15 +89,16 @@ public class FuncionarioDAO {
 
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                Funcionario funcionario =
-                        new Funcionario(
+                Funcionario funcionario = new Funcionario(
                                 rs.getString("nome"),
                                 rs.getString("cpf"),
                                 rs.getString("telefone"),
                                 rs.getString("email"),
                                 rs.getString("endereco"),
                                 rs.getDate("data_nascimento").toLocalDate(),
-                                rs.getString("cargo")
+                                rs.getString("cargo"),
+                                rs.getString("login"),
+                                rs.getString("senha")
                         );
                 funcionario.setId(rs.getInt("id"));
                 funcionario.setIdFuncionario(rs.getInt("id_funcionario"));
@@ -105,17 +110,61 @@ public class FuncionarioDAO {
         return null;
     }
 
+    public static Funcionario buscaFuncionarioByLogin(String login){
+        String sql = """
+        SELECT f.id_funcionario,
+           f.cargo,
+           f.login,
+           f.senha,
+           u.*
+        FROM funcionario f
+        JOIN usuario u
+            ON u.id = f.id_usuario
+        WHERE f.login = ?
+        """;
+        try (var conn = DB.getConnection()) {
+            assert conn != null;
+            try (var pstmt = conn.prepareStatement(sql)){
+                pstmt.setString(1, login);
+                var rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    Funcionario funcionario = new Funcionario(
+                            rs.getString("nome"),
+                            rs.getString("cpf"),
+                            rs.getString("telefone"),
+                            rs.getString("email"),
+                            rs.getString("endereco"),
+                            rs.getDate("data_nascimento").toLocalDate(),
+                            rs.getString("cargo"),
+                            rs.getString("login"),
+                            rs.getString("senha")
+                    );
+
+                    funcionario.setId(rs.getInt("id"));
+                    funcionario.setIdFuncionario(rs.getInt("id_funcionario"));
+                    return funcionario;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
     public static List<Funcionario> listaFuncionarios() {
         List<Funcionario> funcionarios = new ArrayList<>();
 
         String sql = """
-        SELECT f.id_funcionario,
-               u.*,
-               f.cargo
-        FROM funcionario f
-        JOIN usuario u
-             ON u.id = f.id_usuario
-        """;
+            SELECT f.id_funcionario,
+                f.cargo,
+                f.login,
+                f.senha,
+                u.*
+            FROM funcionario f
+            JOIN usuario u
+                ON u.id = f.id_usuario
+            """;
 
         try (Connection conn = DB.getConnection()) {
             assert conn != null;
@@ -130,7 +179,9 @@ public class FuncionarioDAO {
                                 rs.getString("email"),
                                 rs.getString("endereco"),
                                 rs.getDate("data_nascimento").toLocalDate(),
-                                rs.getString("cargo")
+                                rs.getString("cargo"),
+                                rs.getString("login"),
+                                rs.getString("senha")
                         );
 
                 funcionario.setId(rs.getInt("id"));
@@ -158,7 +209,9 @@ public class FuncionarioDAO {
 
         String sqlFuncionario = """
         UPDATE funcionario
-        SET cargo = ?
+        SET cargo = ?,
+            login = ?,
+            senha = ?
         WHERE id_funcionario = ?
         """;
 
@@ -179,7 +232,9 @@ public class FuncionarioDAO {
                 }
                 try (PreparedStatement pstmt = conn.prepareStatement(sqlFuncionario)) {
                     pstmt.setString(1, funcionario.getCargo());
-                    pstmt.setInt(2, funcionario.getIdFuncionario());
+                    pstmt.setString(2, funcionario.getLogin());
+                    pstmt.setString(3, funcionario.getSenha());
+                    pstmt.setInt(4, funcionario.getIdFuncionario());
                     pstmt.executeUpdate();
                 }
                 conn.commit();

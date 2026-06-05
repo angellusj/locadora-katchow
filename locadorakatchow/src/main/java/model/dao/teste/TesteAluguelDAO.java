@@ -19,9 +19,9 @@ public class TesteAluguelDAO implements TesteDaoComponent {
         try {
             System.out.println("\n----- TESTES ALUGUEL DAO -----\n");
 
-            Cliente cliente = ClienteDAO.buscarCliente(2);
-            Funcionario funcionario = FuncionarioDAO.buscarFuncionario(2);
-            Automovel automovel = AutomovelDAO.buscarAutomovel(2);
+            Cliente cliente = ClienteDAO.buscarCliente(1);
+            Funcionario funcionario = FuncionarioDAO.buscarFuncionario(1);
+            Automovel automovel = AutomovelDAO.buscarAutomovel(1);
 
             Aluguel aluguel = new Aluguel(
                     0,
@@ -50,11 +50,11 @@ public class TesteAluguelDAO implements TesteDaoComponent {
                     aluguel.getValorTotal()
             );
 
-            System.out.println("Devolução registrada com sucesso!");
+            //System.out.println("Devolução registrada com sucesso!");
 
-            AluguelDAO.removerAluguel(aluguel);
+            //AluguelDAO.removerAluguel(aluguel);
 
-            System.out.println("Aluguel removido com sucesso!");
+            //System.out.println("Aluguel removido com sucesso!");
 
             return true;
 

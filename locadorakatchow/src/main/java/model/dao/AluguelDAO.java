@@ -45,6 +45,64 @@ public class AluguelDAO {
         }
     }
 
+    public static Aluguel buscarAluguel(int id) {
+
+        String sql = """
+        SELECT *
+        FROM aluguel
+        WHERE id = ?
+        """;
+
+        try (Connection conn = DB.getConnection()) {
+            assert conn != null;
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return mapear(rs);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return null;
+    }
+
+    public static void atualizarAluguel(Aluguel aluguel) {
+
+        String sql = """
+        UPDATE aluguel
+        SET data_inicio = ?,
+            data_fim = ?,
+            valor_total = ?,
+            status = ?,
+            id_cliente = ?,
+            id_funcionario = ?,
+            id_automovel = ?
+        WHERE id = ?
+        """;
+
+        try (Connection conn = DB.getConnection()) {
+            assert conn != null;
+            try (PreparedStatement ps =
+                         conn.prepareStatement(sql)) {
+                ps.setDate(1, Date.valueOf(aluguel.getDataInicio()));
+                ps.setDate(2, Date.valueOf(aluguel.getDataFim()));
+                ps.setDouble(3, aluguel.getValorTotal());
+                ps.setString(4, aluguel.getStatus());
+                ps.setInt(5, aluguel.getCliente().getIdCliente());
+                ps.setInt(6, aluguel.getFuncionario().getIdFuncionario());
+                ps.setInt(7, aluguel.getAutomovel().getId());
+                ps.setInt(8, aluguel.getIdAluguel());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
     public static void registrarDevolucao(
             int idAluguel,
             LocalDate dataEntrega,
