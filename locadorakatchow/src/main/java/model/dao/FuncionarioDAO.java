@@ -1,67 +1,105 @@
-
 package model.dao;
+
 import model.db.DB;
 import model.entity.Funcionario;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FuncionarioDAO {
 
     public static void cadastrarFuncionario(Funcionario funcionario) {
-        var sql = """
-                INSERT INTO funcionario (nome, cpf, telefone, email, endereco, dataNascimento, login, senha, cargo)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-                """;
-        try (var conn = DB.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                pstmt.setString(1, funcionario.getNome());
-                pstmt.setString(2, funcionario.getCpf());
-                pstmt.setString(3, funcionario.getTelefone());
-                pstmt.setString(4, funcionario.getEmail());
-                pstmt.setString(5, funcionario.getEndereco());
-                pstmt.setDate(6, Date.valueOf(funcionario.getDataNascimento()));
-                pstmt.setString(7, funcionario.getLogin());
-                pstmt.setString(8, funcionario.getSenha());
-                pstmt.setString(9, funcionario.getCargo());
-                pstmt.executeUpdate();
 
-                ResultSet rs = pstmt.getGeneratedKeys();
-                if (rs.next()) {
-                    funcionario.setId(rs.getInt(1));
+        String sqlUsuario = """
+        INSERT INTO usuario
+        (nome, cpf, telefone, email, endereco, data_nascimento)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """;
+
+        String sqlFuncionario = """
+        INSERT INTO funcionario
+        (id_usuario, cargo)
+        VALUES (?, ?)
+        """;
+
+        try (Connection conn = DB.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int idUsuario;
+                try (PreparedStatement pstmt =
+                             conn.prepareStatement(
+                                     sqlUsuario,
+                                     Statement.RETURN_GENERATED_KEYS)) {
+
+                    pstmt.setString(1, funcionario.getNome());
+                    pstmt.setString(2, funcionario.getCpf());
+                    pstmt.setString(3, funcionario.getTelefone());
+                    pstmt.setString(4, funcionario.getEmail());
+                    pstmt.setString(5, funcionario.getEndereco());
+                    pstmt.setDate(6, Date.valueOf(funcionario.getDataNascimento()));
+                    pstmt.executeUpdate();
+
+                    ResultSet rs = pstmt.getGeneratedKeys();
+                    rs.next();
+                    idUsuario = rs.getInt(1);
+
+                    funcionario.setId(idUsuario);
                 }
+                try (PreparedStatement pstmt =
+                             conn.prepareStatement(sqlFuncionario, Statement.RETURN_GENERATED_KEYS)) {
+                    pstmt.setInt(1, idUsuario);
+                    pstmt.setString(2, funcionario.getCargo());
+                    pstmt.executeUpdate();
+
+                    ResultSet rs = pstmt.getGeneratedKeys();
+                    if (rs.next()) {
+                        funcionario.setIdFuncionario(
+                                rs.getInt(1));
+                    }
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public static Funcionario buscarFuncionario(int id) {
-        var sql = "SELECT * FROM funcionario WHERE id_func = ?;";
-        try(var conn = DB.getConnection()) {
+    public static Funcionario buscarFuncionario(int idFuncionario) {
+        String sql = """
+        SELECT f.id_funcionario,
+               u.*,
+               f.cargo
+        FROM funcionario f
+        JOIN usuario u
+             ON u.id = f.id_usuario
+        WHERE f.id_funcionario = ?
+        """;
+
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try(var pstmt = conn.prepareStatement(sql)){
-                pstmt.setInt(1, id);
-                var rs = pstmt.executeQuery();
-                if(rs.next()){
-                    int idf = rs.getInt("id_func");
-                    String nomeFunc = rs.getString("nome");
-                    String cpfFunc = rs.getString("cpf");
-                    String telefoneFunc = rs.getString("telefone");
-                    String emailFunc = rs.getString("email");
-                    String enderecoFunc = rs.getString("endereco");
-                    LocalDate dataNascFunc = rs.getDate("data_nascimento").toLocalDate();
-                    String login = rs.getString("login");
-                    String senha = rs.getString("senha");
-                    String cargo = rs.getString("cargo");
-                    Funcionario func = new Funcionario(nomeFunc, cpfFunc, telefoneFunc, emailFunc, enderecoFunc, dataNascFunc, login, senha, cargo);
-                    func.setId(idf);
-                    return func;
-                }
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, idFuncionario);
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Funcionario funcionario =
+                        new Funcionario(
+                                rs.getString("nome"),
+                                rs.getString("cpf"),
+                                rs.getString("telefone"),
+                                rs.getString("email"),
+                                rs.getString("endereco"),
+                                rs.getDate("data_nascimento").toLocalDate(),
+                                rs.getString("cargo")
+                        );
+                funcionario.setId(rs.getInt("id"));
+                funcionario.setIdFuncionario(rs.getInt("id_funcionario"));
+                return funcionario;
             }
-        } catch (SQLException e){
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
         return null;
@@ -69,26 +107,35 @@ public class FuncionarioDAO {
 
     public static List<Funcionario> listaFuncionarios() {
         List<Funcionario> funcionarios = new ArrayList<>();
-        var sql = "SELECT id_func AS id, nome, cpf, telefone, email, ndereco, data_nascimento, login, senha, cargo FROM funcionario;";
-        try (var conn = DB.getConnection()) {
+
+        String sql = """
+        SELECT f.id_funcionario,
+               u.*,
+               f.cargo
+        FROM funcionario f
+        JOIN usuario u
+             ON u.id = f.id_usuario
+        """;
+
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try (var pstmt = conn.prepareStatement(sql)) {
-                var rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    int id = rs.getInt("id");
-                    String nome = rs.getString("nome");
-                    String cpfFunc = rs.getString("cpf");
-                    String telefoneFunc = rs.getString("telefone");
-                    String emailFunc = rs.getString("email");
-                    String enderecoFunc = rs.getString("endereco");
-                    LocalDate dataNascFunc = rs.getDate("data_nascimento").toLocalDate();
-                    String login = rs.getString("login");
-                    String senha = rs.getString("senha");
-                    String cargo = rs.getString("cargo");
-                    Funcionario func = new Funcionario(nome, cpfFunc, telefoneFunc, emailFunc, enderecoFunc, dataNascFunc,login, senha, cargo);
-                    func.setId(id);
-                    funcionarios.add(func);
-                }
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Funcionario funcionario = new Funcionario(
+                                rs.getString("nome"),
+                                rs.getString("cpf"),
+                                rs.getString("telefone"),
+                                rs.getString("email"),
+                                rs.getString("endereco"),
+                                rs.getDate("data_nascimento").toLocalDate(),
+                                rs.getString("cargo")
+                        );
+
+                funcionario.setId(rs.getInt("id"));
+                funcionario.setIdFuncionario(rs.getInt("id_funcionario"));
+                funcionarios.add(funcionario);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -97,31 +144,48 @@ public class FuncionarioDAO {
     }
 
     public static void atualizarFuncionario(Funcionario funcionario) {
-        String nome = funcionario.getNome();
-        String cpf = funcionario.getCpf();
-        String telefone = funcionario.getTelefone();
-        String email = funcionario.getEmail();
-        String endereco = funcionario.getEndereco();
-        LocalDate dataNasc = funcionario.getDataNascimento();
-        String login = funcionario.getLogin();
-        String senha = funcionario.getSenha();
-        String cargo = funcionario.getCargo();
 
-        var sql = "UPDATE funcionario SET nome = ?, cpf = ?, telefone = ?, email = ?, endereco = ?, data_nascimento = ?, login = ?, senha = ?, cargo = ? WHERE id_func = ?;";
-        try (var conn = DB.getConnection()) {
+        String sqlUsuario = """
+        UPDATE usuario
+        SET nome = ?,
+            cpf = ?,
+            telefone = ?,
+            email = ?,
+            endereco = ?,
+            data_nascimento = ?
+        WHERE id = ?
+        """;
+
+        String sqlFuncionario = """
+        UPDATE funcionario
+        SET cargo = ?
+        WHERE id_funcionario = ?
+        """;
+
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try (var pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, nome);
-                pstmt.setString(2, cpf);
-                pstmt.setString(3, telefone);
-                pstmt.setString(4, email);
-                pstmt.setString(5, endereco);
-                pstmt.setDate(6, Date.valueOf(funcionario.getDataNascimento()));
-                pstmt.setString(7, login);
-                pstmt.setString(8, senha);
-                pstmt.setString(9, cargo);
-                pstmt.setInt(10, funcionario.getId());
-                pstmt.executeUpdate();
+            conn.setAutoCommit(false);
+
+            try {
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlUsuario)) {
+                    pstmt.setString(1, funcionario.getNome());
+                    pstmt.setString(2, funcionario.getCpf());
+                    pstmt.setString(3, funcionario.getTelefone());
+                    pstmt.setString(4, funcionario.getEmail());
+                    pstmt.setString(5, funcionario.getEndereco());
+                    pstmt.setDate(6, Date.valueOf(funcionario.getDataNascimento()));
+                    pstmt.setInt(7, funcionario.getId());
+                    pstmt.executeUpdate();
+                }
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlFuncionario)) {
+                    pstmt.setString(1, funcionario.getCargo());
+                    pstmt.setInt(2, funcionario.getIdFuncionario());
+                    pstmt.executeUpdate();
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -129,16 +193,16 @@ public class FuncionarioDAO {
     }
 
     public static void removerFuncionario(Funcionario funcionario) {
-        var sql = "DELETE FROM funcionario WHERE id_func = ?;";
-        try (var conn = DB.getConnection()) {
+        String sql =
+                "DELETE FROM usuario WHERE id = ?";
+
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try (var pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, funcionario.getId());
-                pstmt.executeUpdate();
-            }
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, funcionario.getId());
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
-
 }
