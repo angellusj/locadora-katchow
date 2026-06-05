@@ -1,28 +1,24 @@
 package model.entity;
+
 import java.time.LocalDate;
 
-public class Cliente extends Usuario{
-    private LocalDate dataCadastro;
+public class Cliente extends Usuario {
+    private int idCliente;
 
-    public Cliente(String nome, String cpf, String telefone,
-                   String email, String endereco, LocalDate dataNascimento, LocalDate dataCadastro) {
+    public Cliente(String nome, String cpf, String telefone, String email, String endereco, LocalDate dataNascimento) {
         super(nome, cpf, telefone, email, endereco, dataNascimento);
-        this.dataCadastro = dataCadastro;
+        this.idCliente = 0;
     }
 
-    //Get e Set
-    public LocalDate getDataCadastro() {
-        return dataCadastro;
-    }
+    public int getIdCliente() {return idCliente;}
 
-    public void setDataCadastro(LocalDate dataCadastro) {
-        this.dataCadastro = dataCadastro;
-    }
+    public void setIdCliente(int idCliente) {this.idCliente = idCliente;}
 
     @Override
     public String toString() {
         String res = " ";
-        res += "\nData de Cadastro: ";
-        return super.toString() + res;
+        res += super.toString();
+        res += "\nIdCliente: " + idCliente;
+        return res;
     }
 }

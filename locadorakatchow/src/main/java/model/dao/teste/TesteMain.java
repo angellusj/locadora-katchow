@@ -18,7 +18,7 @@ public class TesteMain {
         System.out.println("classpath = " + System.getProperty("java.class.path"));
 
         TesteDaoComposite testes;
-        testes = new TesteDaoComposite(new TesteClienteDAO(), new TesteFuncionarioDAO());
+        testes = new TesteDaoComposite(new TesteClienteDAO(), new TesteFuncionarioDAO(), new TesteAutomovelDAO(), new TesteAluguelDAO());
 
         testes.teste();
     }

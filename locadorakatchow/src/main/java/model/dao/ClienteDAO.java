@@ -3,7 +3,6 @@ package model.dao;
 import model.db.DB;
 import model.entity.Cliente;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,59 +21,88 @@ public class ClienteDAO {
      */
 
     public static void cadastrarCliente(Cliente cliente) {
-        var sql = """
-                INSERT INTO cliente
-                (nome, cpf, telefone, email, endereco, data_nascimento)
-                VALUES (?, ?, ?, ?, ?, ?);
-                """;
 
-        try (var conn = DB.getConnection()) {
+        String sqlUsuario = """
+        INSERT INTO usuario
+        (nome, cpf, telefone, email, endereco, data_nascimento)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """;
+
+        String sqlCliente = """
+        INSERT INTO cliente (id_usuario)
+        VALUES (?)
+        """;
+
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try (PreparedStatement pstmt =
-                         conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            conn.setAutoCommit(false);
+            try {
+                int idUsuario;
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlUsuario, Statement.RETURN_GENERATED_KEYS)) {
+                    pstmt.setString(1, cliente.getNome());
+                    pstmt.setString(2, cliente.getCpf());
+                    pstmt.setString(3, cliente.getTelefone());
+                    pstmt.setString(4, cliente.getEmail());
+                    pstmt.setString(5, cliente.getEndereco());
+                    pstmt.setDate(6, Date.valueOf(cliente.getDataNascimento()));
+                    pstmt.executeUpdate();
 
-                pstmt.setString(1, cliente.getNome);
-                pstmt.setString(2, cliente.getCpf());
-                pstmt.setString(3, cliente.getTelefone());
-                pstmt.setString(4, cliente.getEmail());
-                pstmt.setString(5, cliente.getEndereco());
-                pstmt.setDate(6, Date.valueOf(cliente.getDataNascimento()));
-                pstmt.executeUpdate();
-
-                ResultSet rs = pstmt.getGeneratedKeys();
-                if (rs.next()) {
-                    cliente.setId(rs.getInt(1));
+                    ResultSet rs = pstmt.getGeneratedKeys();
+                    rs.next();
+                    idUsuario = rs.getInt(1);
+                    cliente.setId(idUsuario);
                 }
-            }
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlCliente, Statement.RETURN_GENERATED_KEYS)) {
+                    pstmt.setInt(1, idUsuario);
+                    pstmt.executeUpdate();
 
+                    ResultSet rs = pstmt.getGeneratedKeys();
+                    if (rs.next()) {
+                        cliente.setIdCliente(rs.getInt(1));
+                    }
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
+    public static Cliente buscarCliente(int idCliente) {
 
-    public static Cliente buscarCliente(int id) {
-        var sql = "SELECT * FROM cliente WHERE id_cliente = ?;";
+        String sql = """
+        SELECT c.id_cliente,
+               u.*
+        FROM cliente c
+        JOIN usuario u
+            ON c.id_usuario = u.id
+        WHERE c.id_cliente = ?
+        """;
 
-        try (var conn = DB.getConnection()) {
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, id);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    id = rs.getInt("id_cliente");
-                    String nome = rs.getString("nome");
-                    String cpf = rs.getString("cpf");
-                    String telefone = rs.getString("telefone");
-                    String email = rs.getString("email");
-                    String endereco = rs.getString("endereco");
-                    LocalDate dataNascimento = rs.getDate("data_nascimento").toLocalDate();
-                    LocalDate dataCadastro =  rs.getDate("data_cadastro").toLocalDate();
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, idCliente);
 
-                    Cliente cliente = new Cliente(nome, cpf, telefone, email, endereco, dataNascimento, dataCadastro);
-                    cliente.setId(id);
-                    return cliente;
-                }
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Cliente cliente =
+                        new Cliente(
+                                rs.getString("nome"),
+                                rs.getString("cpf"),
+                                rs.getString("telefone"),
+                                rs.getString("email"),
+                                rs.getString("endereco"),
+                                rs.getDate("data_nascimento")
+                                        .toLocalDate()
+                        );
+                cliente.setId(rs.getInt("id"));
+                cliente.setIdCliente(rs.getInt("id_cliente"));
+
+                return cliente;
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -83,77 +111,80 @@ public class ClienteDAO {
     }
 
     public static List<Cliente> listarCliente() {
+
         List<Cliente> clientes = new ArrayList<>();
 
-        var sql = "SELECT * FROM cliente;";
+        String sql = """
+        SELECT c.id_cliente,
+               u.*
+        FROM cliente c
+        JOIN usuario u
+            ON c.id_usuario = u.id
+        """;
 
-        try (var conn = DB.getConnection()) {
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    int id = rs.getInt("id_cliente");
-                    String nome = rs.getString("nome");
-                    String cpf= rs.getString("cpf");
-                    String telefone = rs.getString("telefone");
-                    String email = rs.getString("email");
-                    String endereco = rs.getString("endereco");
-                    LocalDate dataNascimento = rs.getDate("data_nascimento").toLocalDate();
-                    LocalDate dataCadastro =  rs.getDate("data_cadastro").toLocalDate();
+            PreparedStatement pstmt = conn.prepareStatement(sql);
 
-                    var cliente = new Cliente(nome, cpf, telefone, email, endereco, dataNascimento, dataCadastro);
-                    cliente.setId(id);
-
-                    clientes.add(cliente);
-                }
-                return clientes;
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Cliente cliente =
+                        new Cliente(
+                                rs.getString("nome"),
+                                rs.getString("cpf"),
+                                rs.getString("telefone"),
+                                rs.getString("email"),
+                                rs.getString("endereco"),
+                                rs.getDate("data_nascimento").toLocalDate()
+                        );
+                cliente.setId(rs.getInt("id"));
+                cliente.setIdCliente(rs.getInt("id_cliente"));
+                clientes.add(cliente);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-
-        return null;
+        return clientes;
     }
 
     public static void atualizarCliente(Cliente cliente) {
 
-        var sql = """
-                UPDATE cliente
-                SET nome = ?,
-                    cpf = ?,
-                    telefone = ?,
-                    email = ?,
-                    endereco = ?,
-                    data_nascimento = ?
-                WHERE id_cliente = ?;
-                """;
+        String sql = """
+        UPDATE usuario
+        SET nome = ?,
+            cpf = ?,
+            telefone = ?,
+            email = ?,
+            endereco = ?,
+            data_nascimento = ?
+        WHERE id = ?
+        """;
 
-        try (var conn = DB.getConnection()) {
-            assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, cliente.getNome());
-                pstmt.setString(2, cliente.getCpf());
-                pstmt.setString(3, cliente.getTelefone());
-                pstmt.setString(4, cliente.getEmail());
-                pstmt.setString(5, cliente.getEndereco());
-                pstmt.setDate(6, Date.valueOf(cliente.getDataNascimento()));
-                pstmt.setInt(7, cliente.getId());
-                pstmt.executeUpdate();
-            }
+        try (Connection conn = DB.getConnection()) {
+
+            assert conn != null;PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, cliente.getNome());
+            pstmt.setString(2, cliente.getCpf());
+            pstmt.setString(3, cliente.getTelefone());
+            pstmt.setString(4, cliente.getEmail());
+            pstmt.setString(5, cliente.getEndereco());
+            pstmt.setDate(6, Date.valueOf(cliente.getDataNascimento()));
+            pstmt.setInt(7, cliente.getId());
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
     public static void removerCliente(Cliente cliente) {
-        var sql = "DELETE FROM cliente WHERE id_cliente = ?;";
 
-        try (var conn = DB.getConnection()) {
+        String sql = "DELETE FROM usuario WHERE id = ?";
+
+        try (Connection conn = DB.getConnection()) {
             assert conn != null;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, cliente.getId());
-                pstmt.executeUpdate();
-            }
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, cliente.getId());
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

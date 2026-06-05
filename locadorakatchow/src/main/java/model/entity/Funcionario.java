@@ -3,31 +3,28 @@ package model.entity;
 import java.time.LocalDate;
 
 public class Funcionario extends Usuario {
-    private String login, senha, cargo;
+    private int idFuncionario;
+    private String cargo;
 
-    public Funcionario(String nome, String cpf, String telefone,
-                       String email, String endereco, LocalDate dataNascimento, String login, String senha, String cargo) {
+    public Funcionario(String nome, String cpf, String telefone, String email, String endereco, LocalDate dataNascimento, String cargo) {
         super(nome, cpf, telefone, email, endereco, dataNascimento);
-        this.login = login;
-        this.senha = senha;
+        this.idFuncionario = 0;
         this.cargo = cargo;
     }
 
-    public String getLogin() {return login;}
-    public void setLogin(String login) {this.login = login;}
+    public int getIdFuncionario() {return idFuncionario;}
 
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
+    public void setIdFuncionario(int idFuncionario) {this.idFuncionario = idFuncionario;}
 
-    public String getCargo() { return cargo; }
-    public void setCargo(String cargo) { this.cargo = cargo; }
+    public String getCargo() {return cargo;}
+
+    public void setCargo(String cargo) {this.cargo = cargo;}
 
     @Override
     public String toString() {
-        String res = " ";
+        String res = "";
         res += super.toString();
-        res += "\nLogin: " + login;
-        res += "\nSenha: " + senha;
+        res += "\nFuncionario: " + idFuncionario;
         res += "\nCargo: " + cargo;
         return res;
     }

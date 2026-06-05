@@ -3,13 +3,15 @@ package model.entity;
 import java.time.LocalDate;
 
 public abstract class Usuario {
-    public String getNome;
     private int id;
-    private String nome, cpf, telefone, email, endereco;
+    private String nome;
+    private String cpf;
+    private String telefone;
+    private String email;
+    private String endereco;
     private LocalDate dataNascimento;
 
-    public Usuario(String nome, String cpf, String telefone,
-                   String email, String endereco, LocalDate dataNascimento) {
+    public Usuario(String nome, String cpf, String telefone, String email, String endereco, LocalDate dataNascimento) {
         this.id = 0;
         this.nome = nome;
         this.cpf = cpf;
@@ -19,7 +21,6 @@ public abstract class Usuario {
         this.dataNascimento = dataNascimento;
     }
 
-    // Getters e setters
     public int getId() {
         return id;
     }
@@ -79,12 +80,13 @@ public abstract class Usuario {
     @Override
     public String toString() {
         String res = " ";
+        res += "\nId Usuário: " + id;
         res += "\nNome: " + nome;
         res += "\nCpf: " + cpf;
         res += "\nTelefone: " + telefone;
         res += "\nEmail: " + email;
-        res += "\nEndereço: " + endereco;
-        res += "\nData de nascimento: " + dataNascimento;
+        res += "\nEndereco: " + endereco;
+        res += "\nData de Nascimento: " + dataNascimento;
         return res;
     }
 }
