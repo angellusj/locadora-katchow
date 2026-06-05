@@ -26,12 +26,14 @@ public class TesteFuncionarioDAO implements TesteDaoComponent {
 
                 funcionario = new Funcionario(
                         "Lucas",
-                        "22222222222",
-                        "84222222222",
-                        "lucas@email.com",
-                        "Rua Teste, 456",
+                        "88888888888",
+                        "84666666666",
+                        "lucasadm@email.com",
+                        "Rua Teste, 548",
                         LocalDate.of(2000, 2, 2),
-                        "Gerente"
+                        "Gerente",
+                        "lucasadm",
+                        "123456"
                 );
 
             } else {
@@ -52,7 +54,9 @@ public class TesteFuncionarioDAO implements TesteDaoComponent {
             System.out.println("Atualizando funcionário...");
 
             funcionario.setNome("Angela");
-            funcionario.setEmail("angela@email.com");
+            funcionario.setEmail("angelaadmin@email.com");
+            funcionario.setLogin("angelaadmin");
+            funcionario.setSenha("654321");
 
             FuncionarioDAO.atualizarFuncionario(funcionario);
 
